@@ -11,6 +11,7 @@ import java.util.Random;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class Counter {
+    //fields
     private final JFormattedTextField minutes;
     private final JFormattedTextField seconds;
     private final JFormattedTextField statusText;
@@ -20,12 +21,14 @@ public class Counter {
     private final int delay = 1000;
     private boolean work = true;
     private boolean paused = false;
+    private boolean audio = true;
     private int pomodoros = 0;
     String[] workTimes = {"25", "00"}; //minutes, seconds
     String[] breakTimes = {"05", "00"}; //minutes, seconds
     JButton timerStart = new JButton("Start");
     JButton timerReset = new JButton("Reset");
     JButton timerPause = new JButton("Pause");
+    JButton muteAudio = new JButton();
 
     JLabel poms1 = new JLabel();
     JLabel poms2 = new JLabel();
@@ -38,7 +41,7 @@ public class Counter {
     JLabel powerPom = new JLabel();
 
 
-
+//inspirational quotes
     public String[] quotes =
             {
                     "Without hard work, nothing grows but weeds.",
@@ -115,7 +118,13 @@ public class Counter {
                 }
             });
             clip.open(AudioSystem.getAudioInputStream(file));
+            FloatControl gainControl =
+                    (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            gainControl.setValue(-6.0f); // Reduce volume by 6dB
             clip.start();
+
+
+
         } catch (Exception exc) {
             exc.printStackTrace(System.out);
         }
@@ -157,8 +166,12 @@ public class Counter {
             if (time.equals(LocalTime.MIN)) {
                 if (work) {
                     if (pomodoros < 8) {
-                        play(getClass().getClassLoader().getResource("tf.wav"));
-                    } else play(getClass().getClassLoader().getResource("ptf.wav"));
+                        if (audio) {
+                            play(getClass().getClassLoader().getResource("tf.wav"));
+                        }
+                    } else if (audio) {
+                            play(getClass().getClassLoader().getResource("ptf.wav"));
+                    }
 
                     work = false;
                     pomodoros++;
@@ -201,8 +214,13 @@ public class Counter {
                     //break;
                 } else if (!work) {
                     if (pomodoros < 9) {
-                        play(getClass().getClassLoader().getResource("ts.wav"));
-                    } else play(getClass().getClassLoader().getResource("pts.wav"));
+                        if (audio) {
+                            play(getClass().getClassLoader().getResource("ts.wav"));
+                        }
+
+                    } else if (audio) {
+                        play(getClass().getClassLoader().getResource("pts.wav"));
+                    }
                     work = true;
                     timer.stop();
                     minutes.setText(workTimes[0]);
@@ -235,6 +253,8 @@ public class Counter {
 
     Counter() {
         ImageIcon img = new ImageIcon(getClass().getClassLoader().getResource("poms.png"));
+        Icon muteIcon = new ImageIcon(getClass().getClassLoader().getResource("mute.png"));
+        Icon audioIcon = new ImageIcon(getClass().getClassLoader().getResource("audio.png"));
         JFrame frame = new JFrame("Pomodoro");
         frame.setIconImage(img.getImage());
         timer = new Timer(delay, taskPerformer);
@@ -280,10 +300,31 @@ public class Counter {
         formatButton(timerReset, 20, 290, 270, 110, 40);              //reset button
         formatJFText(statusText, "", 40, 52, 205, 300, 40);       //status (work/rest) text
         formatJFText(pomodorosText, "", 22, 55, 240, 350, 30);    //no. of pomodoros text
-        currentQuote.setBounds(52, 139, 390, 60);                 //current quote (JArea)
+        currentQuote.setBounds(52, 139, 390, 60);//current quote (JArea)
+
+        muteAudio.setOpaque(false);
+        muteAudio.setBounds(7, 5, 40, 40);
+        muteAudio.setIcon(audioIcon);
+        muteAudio.setContentAreaFilled(false);
+        muteAudio.setBorderPainted(false);
+        muteAudio.setFocusPainted(false);
+
+
 
         timerReset.setEnabled(false);
         timerPause.setEnabled(false);
+
+
+        muteAudio.addActionListener(actionEvent -> {
+            if (audio) {
+                audio = false;
+                muteAudio.setIcon(muteIcon);
+            } else if (!audio) {
+                audio = true;
+                muteAudio.setIcon(audioIcon);
+            }
+        });
+
 
         timerStart.addActionListener(actionEvent -> {
             time = LocalTime.of(0, Integer.parseInt(minutes.getText()), Integer.parseInt(seconds.getText()));
@@ -291,7 +332,9 @@ public class Counter {
             timerPause.setEnabled(true);
             timerReset.setEnabled(true);
             timer.start();
-            play(getClass().getClassLoader().getResource("ts.wav"));
+            if (audio) {
+                play(getClass().getClassLoader().getResource("ts.wav"));
+            }
             statusText.setText("Work!");
             pomodorosText.setText("Pomodoros: " + pomodoros);
             currentQuote.setText('"' + quotes[rCount] + '"' + "\n- " + authors[rCount]);
@@ -370,6 +413,7 @@ public class Counter {
         frame.add(timerStart); //Start button
         frame.add(timerPause); //Pause button
         frame.add(timerReset); //Reset button
+        frame.add(muteAudio); //Mute button
         frame.add(poms1);
         frame.add(poms2);
         frame.add(poms3);
