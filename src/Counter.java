@@ -303,7 +303,7 @@ public class Counter {
         currentQuote.setBounds(52, 139, 390, 60);//current quote (JArea)
 
         muteAudio.setOpaque(false);
-        muteAudio.setBounds(7, 5, 40, 40);
+        muteAudio.setBounds(0, 0, 40, 40);
         muteAudio.setIcon(audioIcon);
         muteAudio.setContentAreaFilled(false);
         muteAudio.setBorderPainted(false);
